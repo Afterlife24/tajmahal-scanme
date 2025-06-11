@@ -23,6 +23,8 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(30);
   const [showEmailEdit, setShowEmailEdit] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   const otpInputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -129,7 +131,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
       return;
     }
 
-    setLoading(true);
+    setVerifying(true);
     setError('');
     try {
       const response = await fetch('https://tajmahal-server.gofastapi.com/verify', {
@@ -139,14 +141,18 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
       });
 
       if (response.ok) {
-        onVerify();
+        setVerificationSuccess(true);
+        setTimeout(() => {
+          setVerifying(false);
+          onVerify();
+        }, 2000);
       } else {
         setError('Invalid OTP');
+        setVerifying(false);
       }
     } catch (err) {
       setError('Verification failed. Please try again.');
-    } finally {
-      setLoading(false);
+      setVerifying(false);
     }
   };
 
@@ -169,124 +175,143 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
         <button
           onClick={onCancel}
           className="otp-close-btn"
-          disabled={loading}
+          disabled={loading || verifying}
         >
           ×
         </button>
 
         <h3 className="otp-verification-title">OTP Verification</h3>
 
-        <p className="otp-text">
-          {isOtpSent
-            ? 'Enter the 4-digit OTP sent to your email'
-            : 'Enter your email to receive an OTP'}
-        </p>
-
-        {!isOtpSent ? (
-          <>
-            {initialEmail && !showEmailEdit ? (
-              <div className="otp-prefilled-email">
-                <p>OTP will be sent to:</p>
-                <div className="email-edit-container">
-                  <p className="font-semibold">{email}</p>
-                  <button 
-                    onClick={toggleEmailEdit}
-                    className="email-edit-btn"
-                    disabled={loading}
-                  >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="16" 
-                      height="16" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                    >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <input
-                type="email"
-                className="otp-email-input"
-                placeholder="Enter your email"
-                value={email}
-                onChange={handleEmailChange}
-                disabled={loading}
-              />
-            )}
-            <button
-              onClick={handleSendOtp}
-              className={`otp-btn ${loading ? 'otp-btn-loading' : 'otp-btn-primary'}`}
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="otp-spinner-container">
-                  <div className="otp-spinner"></div>
-                </div>
-              ) : (
-                'Send OTP'
-              )}
-            </button>
-          </>
+        {verificationSuccess ? (
+          <div className="verification-success">
+            <div className="success-spinner">
+              <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle className="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path className="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+              </svg>
+            </div>
+            <p className="verification-success-text">Verification successful!</p>
+          </div>
+        ) : verifying ? (
+          <div className="verification-loading">
+            <div className="otp-spinner"></div>
+            <p className="verification-loading-text">Verifying...</p>
+          </div>
         ) : (
           <>
-            <div className="otp-input-container">
-              {[0, 1, 2, 3].map((index) => (
-                <input
-                  key={index}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={otp[index]}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  onPaste={handleOtpPaste}
-                  className="otp-input"
+            <p className="otp-text">
+              {isOtpSent
+                ? 'Enter the 4-digit OTP sent to your email'
+                : 'Enter your email to receive an OTP'}
+            </p>
+
+            {!isOtpSent ? (
+              <>
+                {initialEmail && !showEmailEdit ? (
+                  <div className="otp-prefilled-email">
+                    <p>OTP will be sent to:</p>
+                    <div className="email-edit-container">
+                      <p className="font-semibold">{email}</p>
+                      <button 
+                        onClick={toggleEmailEdit}
+                        className="email-edit-btn"
+                        disabled={loading}
+                      >
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <input
+                    type="email"
+                    className="otp-email-input"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    disabled={loading}
+                  />
+                )}
+                <button
+                  onClick={handleSendOtp}
+                  className={`otp-btn ${loading ? 'otp-btn-loading' : 'otp-btn-primary'}`}
                   disabled={loading}
-                  ref={(el) => (otpInputsRef.current[index] = el)}
-                />
-              ))}
-            </div>
-            <button
-              onClick={handleVerify}
-              className={`otp-btn ${loading ? 'otp-btn-loading' : 'otp-btn-success'}`}
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="otp-spinner-container">
-                  <div className="otp-spinner"></div>
+                >
+                  {loading ? (
+                    <div className="otp-spinner-container">
+                      <div className="otp-spinner"></div>
+                    </div>
+                  ) : (
+                    'Send OTP'
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="otp-input-container">
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otp[index]}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={handleOtpPaste}
+                      className="otp-input"
+                      disabled={loading || verifying}
+                      ref={(el) => (otpInputsRef.current[index] = el)}
+                    />
+                  ))}
                 </div>
-              ) : (
-                'Verify OTP'
-              )}
-            </button>
-            <div className="otp-resend-container">
-              <button
-                onClick={handleResendOtp}
-                className="otp-resend-btn"
-                disabled={resendDisabled || loading}
-              >
-                Resend OTP {resendDisabled && `(${countdown}s)`}
-              </button>
-              <button
-                onClick={handleChangeEmail}
-                className="otp-btn otp-btn-secondary"
-                disabled={loading}
-              >
-                Change Email
-              </button>
-            </div>
+                <button
+                  onClick={handleVerify}
+                  className={`otp-btn ${loading || verifying ? 'otp-btn-loading' : 'otp-btn-success'}`}
+                  disabled={loading || verifying}
+                >
+                  {loading || verifying ? (
+                    <div className="otp-spinner-container">
+                      <div className="otp-spinner"></div>
+                    </div>
+                  ) : (
+                    'Verify OTP'
+                  )}
+                </button>
+                <div className="otp-resend-container">
+                  <button
+                    onClick={handleResendOtp}
+                    className="otp-resend-btn"
+                    disabled={resendDisabled || loading || verifying}
+                  >
+                    Resend OTP {resendDisabled && `(${countdown}s)`}
+                  </button>
+                  <button
+                    onClick={handleChangeEmail}
+                    className="otp-btn otp-btn-secondary"
+                    disabled={loading || verifying}
+                  >
+                    Change Email
+                  </button>
+                </div>
+              </>
+            )}
           </>
         )}
 
-        {success && !error && (
+        {success && !error && !verificationSuccess && (
           <p className="otp-success-message">
             OTP sent successfully! Check your email.
           </p>

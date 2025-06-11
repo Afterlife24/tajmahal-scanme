@@ -40,10 +40,14 @@ const ItemDetails = () => {
         setComboItems(combos);
       }
 
+      // Check if this item exists in cart
       const cartItem = cartItems.find(item => item.id === parseInt(id));
       if (cartItem) {
         setExistingItem(cartItem);
         setQuantity(cartItem.quantity);
+      } else {
+        setExistingItem(null);
+        setQuantity(1);
       }
     };
     fetchData();
@@ -66,14 +70,22 @@ const ItemDetails = () => {
   };
 
   const handleAddToCart = () => {
+    if (!item) return;
+    
     const cartItem = {
       id: item.id,
       name: item.name,
       price: item.price,
       image: item.image,
-      quantity
+      quantity: quantity
     };
-    existingItem ? updateCartItem(cartItem.id, cartItem.quantity) : addToCart(cartItem);
+
+    if (existingItem) {
+      updateCartItem(cartItem.id, cartItem.quantity);
+    } else {
+      addToCart(cartItem);
+    }
+    
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
     resetInactivityTimer();
@@ -86,8 +98,10 @@ const ItemDetails = () => {
       ? (currentIndex + 1) % menuData.length
       : (currentIndex - 1 + menuData.length) % menuData.length;
 
-    navigate(`/item/${menuData[newIndex].id}`, { replace: true });
+    navigate(`/item/${menuData[newIndex].id}`);
+    // Reset states for the new item
     setQuantity(1);
+    setExistingItem(null);
     setIsSwiping(false);
     setCurrentX(0);
     resetInactivityTimer();
@@ -120,6 +134,8 @@ const ItemDetails = () => {
   };
 
   const addComboToCart = () => {
+    if (!selectedCombo) return;
+    
     addToCart({
       id: selectedCombo.id,
       name: selectedCombo.name,
@@ -163,8 +179,16 @@ const ItemDetails = () => {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold mt-4 text-gray-900">{item?.name}</h1>
-            
+            <div className="flex items-center mt-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm text-gray-600 ml-1">{item?.rating || '4.5'}</span>
+              <Clock className="w-4 h-4 text-gray-400 ml-3" />
+              <span className="text-sm text-gray-600 ml-1">{item?.time || '15-20 min'}</span>
+            </div>
           </div>
+          <button className="p-2 rounded-full border border-gray-200">
+            <Heart className="w-5 h-5 text-gray-400" />
+          </button>
         </div>
 
         <p className="mt-4 text-gray-600">{item?.desc}</p>

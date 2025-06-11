@@ -5,6 +5,7 @@
 // } from 'lucide-react';
 // import { useCart } from '../context/CartContext';
 // import Navbar from '../components/Navbar';
+// import OtpVerification from './OtpVerification';
 
 // const CartPage = () => {
 //   const navigate = useNavigate();
@@ -25,68 +26,58 @@
 //   // Delivery options state
 //   const [showDeliveryPopup, setShowDeliveryPopup] = useState(false);
 //   const [deliveryOptionSelected, setDeliveryOptionSelected] = useState<'tapAndCollect' | 'delivery' | null>(null);
+//   const [showOtpVerification, setShowOtpVerification] = useState(false);
+//   const [customerEmail, setCustomerEmail] = useState('');
   
 //   // Form states
-//   const [email, setEmail] = useState(localStorage.getItem('email') || '');
 //   const [name, setName] = useState('');
 //   const [address, setAddress] = useState('');
 
-//   const handleCheckout = async () => {
-//     if (!deliveryOptionSelected) {
+//   // Modify the handleCheckout function in CartPage.jsx
+// const handleCheckout = async () => {
+//   if (!deliveryOptionSelected) {
 //       setShowDeliveryPopup(true);
 //       return;
-//     }
+//   }
 
-//     // Validate form based on delivery option
-//     if (!email) {
-//       setError('Email is required');
-//       return;
-//     }
+//   setIsCheckingOut(true);
+//   setError(null);
 
-//     if (deliveryOptionSelected === 'delivery' && (!name || !address)) {
-//       setError('Name and address are required for delivery');
-//       return;
-//     }
-
-//     setIsCheckingOut(true);
-//     setError(null);
-
-//     try {
-//       const orderTime = new Date().toISOString();
-
+//   try {
 //       const orderData = {
-//         dishes: cartItems.map(item => ({
-//           id: item.id,
-//           name: item.name,
-//           price: item.price.toString(),
-//           quantity: item.quantity,
-//           image: item.image,
-//         })),
-//         email,
-//         name: deliveryOptionSelected === 'delivery' ? name : undefined,
-//         address: deliveryOptionSelected === 'delivery' ? address : undefined,
-//         total: cartTotal.toFixed(2),
-//         orderTime,
-//         deliveryOption: deliveryOptionSelected,
+//           dishes: cartItems.map(item => ({
+//               id: item.id,
+//               name: item.name,
+//               price: item.price.toString(),
+//               quantity: item.quantity,
+//               image: item.image,
+//           })),
+//           email: customerEmail,
+//           name: deliveryOptionSelected === 'delivery' ? name : undefined,
+//           address: deliveryOptionSelected === 'delivery' ? address : undefined,
+//           total: cartTotal.toFixed(2),
+//           deliveryOption: deliveryOptionSelected,
 //       };
 
-//       const response = await fetch('https://tajmahal-server.gofastapi.com/sendOrder', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(orderData),
+//       const response = await fetch('https://tajmahal-server.gofastapi.com/createOrder', {
+//           method: 'POST',
+//           headers: { 'Content-Type': 'application/json' },
+//           body: JSON.stringify(orderData),
 //       });
 
 //       const result = await response.json();
 //       if (!response.ok || !result.success) {
-//         throw new Error(result.error || 'Failed to place order');
+//           throw new Error(result.error || 'Failed to place order');
 //       }
 
+//       // Add to local orders state
 //       addOrder({
-//         dishes: [...cartItems],
-//         total: cartTotal.toFixed(2),
-//         orderTime,
-//         status: 'preparing',
-//         deliveryOption: deliveryOptionSelected,
+//           id: result.orderId,
+//           dishes: [...cartItems],
+//           total: cartTotal.toFixed(2),
+//           orderTime: new Date().toISOString(),
+//           status: 'preparing',
+//           deliveryOption: deliveryOptionSelected,
 //       });
 
 //       clearCart();
@@ -94,12 +85,13 @@
 //       setTimeout(() => setOrderSuccess(false), 3000);
 //       setDeliveryOptionSelected(null);
 //       setShowDeliveryPopup(false);
-//     } catch (err) {
+//       setShowOtpVerification(false);
+//   } catch (err) {
 //       setError(err instanceof Error ? err.message : 'Order failed. Try again.');
-//     } finally {
+//   } finally {
 //       setIsCheckingOut(false);
-//     }
-//   };
+//   }
+// };
 
 //   const handleImageClick = (itemId: number) => navigate(`/item/${itemId}`);
 
@@ -128,19 +120,24 @@
 //             <input
 //               type="email"
 //               id="email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
+//               value={customerEmail}
+//               onChange={(e) => setCustomerEmail(e.target.value)}
 //               className="w-full p-3 border border-gray-300 rounded-lg"
 //               placeholder="Enter your email"
 //               required
 //             />
 //           </div>
 //           <button
-//             onClick={handleCheckout}
-//             disabled={isCheckingOut}
+//             onClick={() => {
+//               if (!customerEmail) {
+//                 setError('Email is required');
+//                 return;
+//               }
+//               setShowOtpVerification(true);
+//             }}
 //             className={`w-full ${isCheckingOut ? 'bg-indigo-600/70' : 'bg-indigo-600'} text-white py-3 rounded-lg font-medium`}
 //           >
-//             {isCheckingOut ? 'Processing...' : 'Confirm Order'}
+//             Verify Email
 //           </button>
 //         </div>
 //       );
@@ -182,19 +179,24 @@
 //             <input
 //               type="email"
 //               id="delivery-email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
+//               value={customerEmail}
+//               onChange={(e) => setCustomerEmail(e.target.value)}
 //               className="w-full p-3 border border-gray-300 rounded-lg"
 //               placeholder="Enter your email"
 //               required
 //             />
 //           </div>
 //           <button
-//             onClick={handleCheckout}
-//             disabled={isCheckingOut}
+//             onClick={() => {
+//               if (!customerEmail || !name || !address) {
+//                 setError('All fields are required');
+//                 return;
+//               }
+//               setShowOtpVerification(true);
+//             }}
 //             className={`w-full ${isCheckingOut ? 'bg-indigo-600/70' : 'bg-indigo-600'} text-white py-3 rounded-lg font-medium`}
 //           >
-//             {isCheckingOut ? 'Processing...' : 'Confirm Delivery'}
+//             Verify Email
 //           </button>
 //         </div>
 //       );
@@ -304,9 +306,7 @@
 //           {orders.length === 0 ? (
 //             <div className="text-center py-8">
 //               <p className="text-gray-500">No order history yet</p>
-//               <button onClick={() => navigate('/')} className="mt-4 text-indigo-600 font-medium">
-//                 Start Shopping
-//               </button>
+              
 //             </div>
 //           ) : (
 //             orders.map(order => (
@@ -372,7 +372,7 @@
 //       )}
 
 //       {/* Delivery Option Popup */}
-//       {showDeliveryPopup && (
+//       {showDeliveryPopup && !showOtpVerification && (
 //         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
 //           <div className="bg-white rounded-lg p-6 max-w-sm w-full">
 //             {!deliveryOptionSelected ? (
@@ -420,11 +420,23 @@
 //           </div>
 //         </div>
 //       )}
+
+//       {/* OTP Verification Popup */}
+//       {showOtpVerification && (
+//         <OtpVerification
+//           onVerify={handleCheckout}
+//           onCancel={() => setShowOtpVerification(false)}
+//           onEmailUpdate={(email) => setCustomerEmail(email)}
+//           initialEmail={customerEmail}
+//         />
+//       )}
 //     </div>
 //   );
 // };
 
 // export default CartPage;
+
+
 
 
 
@@ -456,6 +468,11 @@ import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
 import OtpVerification from './OtpVerification';
 
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
 const CartPage = () => {
   const navigate = useNavigate();
   const {
@@ -471,6 +488,12 @@ const CartPage = () => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
+  const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean>(false);
+  const [isMessageVisible, setIsMessageVisible] = useState<boolean>(false);
+  const [deliveryMessageColor, setDeliveryMessageColor] = useState<string>("green");
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [isDeliveryChecked, setIsDeliveryChecked] = useState<boolean>(false);
 
   // Delivery options state
   const [showDeliveryPopup, setShowDeliveryPopup] = useState(false);
@@ -482,51 +505,145 @@ const CartPage = () => {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
 
-  // Modify the handleCheckout function in CartPage.jsx
-const handleCheckout = async () => {
-  if (!deliveryOptionSelected) {
+  // Fixed location for your restaurant
+  const restaurantLocation = {
+    latitude: 17.4704259,  // Replace with your restaurant's latitude
+    longitude: 78.3405989  // Replace with your restaurant's longitude
+  };
+
+  // Haversine formula to calculate distance between two coordinates in kilometers
+  const haversineDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const toRad = (deg: number) => deg * (Math.PI / 180);
+
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in kilometers
+  };
+
+  const checkDeliveryAvailability = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoordinates({ latitude, longitude });
+
+          // Calculate the distance to the restaurant
+          const distance = haversineDistance(
+            latitude,
+            longitude,
+            restaurantLocation.latitude,
+            restaurantLocation.longitude
+          );
+
+          if (distance <= 6) { // 5km radius
+            setDeliveryMessage("Delivery is available to your location!");
+            setDeliveryMessageColor("green");
+            setIsDeliveryAvailable(true);
+          } else {
+            setDeliveryMessage("Delivery is not available to your location (max 5km radius)");
+            setDeliveryMessageColor("red");
+            setIsDeliveryAvailable(false);
+          }
+          setIsMessageVisible(true);
+          setIsDeliveryChecked(true);
+
+          setTimeout(() => {
+            setIsMessageVisible(false);
+          }, 4000);
+        },
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            setDeliveryMessage("Please enable location access to check delivery availability");
+            setDeliveryMessageColor("red");
+            setIsMessageVisible(true);
+            setTimeout(() => setIsMessageVisible(false), 4000);
+          } else {
+            setDeliveryMessage("Error fetching your location");
+            setDeliveryMessageColor("red");
+            setIsMessageVisible(true);
+            setTimeout(() => setIsMessageVisible(false), 4000);
+          }
+        }
+      );
+    } else {
+      setDeliveryMessage("Geolocation is not supported by your browser");
+      setDeliveryMessageColor("red");
+      setIsMessageVisible(true);
+      setTimeout(() => setIsMessageVisible(false), 4000);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!deliveryOptionSelected) {
       setShowDeliveryPopup(true);
       return;
-  }
+    }
 
-  setIsCheckingOut(true);
-  setError(null);
+    if (deliveryOptionSelected === 'delivery' && !isDeliveryChecked) {
+      setError('Please check delivery availability before proceeding');
+      return;
+    }
 
-  try {
+    if (deliveryOptionSelected === 'delivery' && !isDeliveryAvailable) {
+      setError('Delivery is not available to your location');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    setError(null);
+
+    try {
       const orderData = {
-          dishes: cartItems.map(item => ({
-              id: item.id,
-              name: item.name,
-              price: item.price.toString(),
-              quantity: item.quantity,
-              image: item.image,
-          })),
-          email: customerEmail,
-          name: deliveryOptionSelected === 'delivery' ? name : undefined,
-          address: deliveryOptionSelected === 'delivery' ? address : undefined,
-          total: cartTotal.toFixed(2),
-          deliveryOption: deliveryOptionSelected,
+        dishes: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price.toString(),
+          quantity: item.quantity,
+          image: item.image,
+        })),
+        email: customerEmail,
+        name: deliveryOptionSelected === 'delivery' ? name : undefined,
+        address: deliveryOptionSelected === 'delivery' ? address : undefined,
+        total: cartTotal.toFixed(2),
+        deliveryOption: deliveryOptionSelected,
+        coordinates: deliveryOptionSelected === 'delivery' ? coordinates : undefined,
       };
 
       const response = await fetch('https://tajmahal-server.gofastapi.com/createOrder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
       });
 
       const result = await response.json();
       if (!response.ok || !result.success) {
-          throw new Error(result.error || 'Failed to place order');
+        throw new Error(result.error || 'Failed to place order');
       }
 
       // Add to local orders state
       addOrder({
-          id: result.orderId,
-          dishes: [...cartItems],
-          total: cartTotal.toFixed(2),
-          orderTime: new Date().toISOString(),
-          status: 'preparing',
-          deliveryOption: deliveryOptionSelected,
+        id: result.orderId,
+        dishes: [...cartItems],
+        total: cartTotal.toFixed(2),
+        orderTime: new Date().toISOString(),
+        status: 'preparing',
+        deliveryOption: deliveryOptionSelected,
       });
 
       clearCart();
@@ -535,12 +652,12 @@ const handleCheckout = async () => {
       setDeliveryOptionSelected(null);
       setShowDeliveryPopup(false);
       setShowOtpVerification(false);
-  } catch (err) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Order failed. Try again.');
-  } finally {
+    } finally {
       setIsCheckingOut(false);
-  }
-};
+    }
+  };
 
   const handleImageClick = (itemId: number) => navigate(`/item/${itemId}`);
 
@@ -605,6 +722,7 @@ const handleCheckout = async () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
               placeholder="Enter your full name"
               required
+              disabled={!isDeliveryChecked}
             />
           </div>
           <div>
@@ -619,6 +737,7 @@ const handleCheckout = async () => {
               placeholder="Enter your full address"
               rows={3}
               required
+              disabled={!isDeliveryChecked}
             />
           </div>
           <div>
@@ -633,17 +752,33 @@ const handleCheckout = async () => {
               className="w-full p-3 border border-gray-300 rounded-lg"
               placeholder="Enter your email"
               required
+              disabled={!isDeliveryChecked}
             />
           </div>
+          <button
+            onClick={checkDeliveryAvailability}
+            className="w-full bg-green-600 text-white py-3 rounded-lg font-medium"
+          >
+            Check Delivery Availability
+          </button>
           <button
             onClick={() => {
               if (!customerEmail || !name || !address) {
                 setError('All fields are required');
                 return;
               }
+              if (!isDeliveryChecked) {
+                setError('Please check delivery availability first');
+                return;
+              }
+              if (!isDeliveryAvailable) {
+                setError('Delivery is not available to your location');
+                return;
+              }
               setShowOtpVerification(true);
             }}
             className={`w-full ${isCheckingOut ? 'bg-indigo-600/70' : 'bg-indigo-600'} text-white py-3 rounded-lg font-medium`}
+            disabled={!isDeliveryAvailable}
           >
             Verify Email
           </button>
@@ -664,6 +799,25 @@ const handleCheckout = async () => {
           <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>
         </div>
       </div>
+
+      {deliveryMessage && isMessageVisible && (
+        <div
+          style={{
+            position: "fixed",
+            top: "10px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: deliveryMessageColor,
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            fontWeight: "bold",
+            zIndex: 1000,
+          }}
+        >
+          {deliveryMessage}
+        </div>
+      )}
 
       <div className="p-4 max-w-2xl mx-auto space-y-10">
         {/* Current Order */}
