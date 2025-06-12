@@ -219,7 +219,6 @@ const ItemDetails = () => {
             <h1 className="text-2xl font-bold mt-4 text-gray-900">{item?.name}</h1>
           </div>
           <button className="p-2 rounded-full border border-gray-200">
-            <Heart className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
