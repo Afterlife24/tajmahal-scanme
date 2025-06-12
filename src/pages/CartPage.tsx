@@ -710,6 +710,21 @@ const CartPage = () => {
     } else if (deliveryOptionSelected === 'delivery') {
       return (
         <div className="space-y-4">
+          {/* Check Delivery Availability Button - Moved to top */}
+          <div>
+          <p className="text-xs text-red-500 mt-1 mb-4">
+              Please check delivery availability before filling out the form
+            </p>
+            <button
+              onClick={checkDeliveryAvailability}
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-medium"
+            >
+              Check Delivery Availability
+            </button>
+            
+          </div>
+
+          {/* Form fields - disabled until delivery is checked */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
@@ -755,12 +770,7 @@ const CartPage = () => {
               disabled={!isDeliveryChecked}
             />
           </div>
-          <button
-            onClick={checkDeliveryAvailability}
-            className="w-full bg-green-600 text-white py-3 rounded-lg font-medium"
-          >
-            Check Delivery Availability
-          </button>
+          
           <button
             onClick={() => {
               if (!customerEmail || !name || !address) {

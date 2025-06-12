@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Clock, Star, Heart, Minus, Plus, ShoppingCart, X } from 'lucide-react';
+import { ChevronLeft, Clock, Star, Heart, Minus, Plus, ShoppingCart, X, ChevronRight } from 'lucide-react';
 import { loadMenuData } from '../pictures';
 import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
@@ -24,7 +24,10 @@ const ItemDetails = () => {
   const [showEdgeIndicator, setShowEdgeIndicator] = useState(true);
   const touchAreaRef = useRef(null);
   const inactivityTimer = useRef(null);
-  const swipeThreshold = 100;
+  const swipeThreshold = 50;
+
+  // Track if we're navigating via swipe to prevent history pollution
+  const isSwipeNavigation = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,7 +43,6 @@ const ItemDetails = () => {
         setComboItems(combos);
       }
 
-      // Check if this item exists in cart
       const cartItem = cartItems.find(item => item.id === parseInt(id));
       if (cartItem) {
         setExistingItem(cartItem);
@@ -52,7 +54,10 @@ const ItemDetails = () => {
     };
     fetchData();
 
-    inactivityTimer.current = setTimeout(() => setShowEdgeIndicator(false), 4000);
+    inactivityTimer.current = setTimeout(() => {
+      setShowEdgeIndicator(false);
+    }, 3000);
+    
     return () => clearTimeout(inactivityTimer.current);
   }, [id, cartItems]);
 
@@ -61,7 +66,7 @@ const ItemDetails = () => {
     clearTimeout(inactivityTimer.current);
     inactivityTimer.current = setTimeout(() => {
       setShowEdgeIndicator(false);
-    }, 2000);
+    }, 3000);
   };
 
   const handleQuantityChange = (change) => {
@@ -93,18 +98,37 @@ const ItemDetails = () => {
 
   const navigateToItem = (direction) => {
     if (!menuData.length) return;
+    
+    // Mark that we're doing swipe navigation
+    isSwipeNavigation.current = true;
+    
     const currentIndex = menuData.findIndex(i => i.id === parseInt(id));
     const newIndex = direction === 'next'
       ? (currentIndex + 1) % menuData.length
       : (currentIndex - 1 + menuData.length) % menuData.length;
 
-    navigate(`/item/${menuData[newIndex].id}`);
-    // Reset states for the new item
+    // Use replace instead of push to prevent history stack pollution
+    navigate(`/item/${menuData[newIndex].id}`, { replace: true });
     setQuantity(1);
     setExistingItem(null);
     setIsSwiping(false);
     setCurrentX(0);
     resetInactivityTimer();
+    
+    // Reset the flag after navigation is complete
+    setTimeout(() => {
+      isSwipeNavigation.current = false;
+    }, 100);
+  };
+
+  const handleBackNavigation = () => {
+    // If we're in swipe navigation mode, go back to the previous page
+    if (isSwipeNavigation.current) {
+      navigate(-1);
+    } else {
+      // Otherwise just go back normally
+      navigate(-1);
+    }
   };
 
   const handleTouchStart = (e) => {
@@ -115,7 +139,8 @@ const ItemDetails = () => {
 
   const handleTouchMove = (e) => {
     if (!isSwiping) return;
-    setCurrentX(e.touches[0].clientX - touchStartX);
+    const deltaX = e.touches[0].clientX - touchStartX;
+    setCurrentX(deltaX);
   };
 
   const handleTouchEnd = () => {
@@ -131,6 +156,7 @@ const ItemDetails = () => {
   const openComboPopup = (combo) => {
     setSelectedCombo(combo);
     setComboQuantity(1);
+    resetInactivityTimer();
   };
 
   const addComboToCart = () => {
@@ -144,6 +170,7 @@ const ItemDetails = () => {
       quantity: comboQuantity
     });
     setSelectedCombo(null);
+    resetInactivityTimer();
   };
 
   const totalPrice = (Number(item?.price || 0) * quantity).toFixed(2);
@@ -151,7 +178,7 @@ const ItemDetails = () => {
 
   return (
     <div
-      className="min-h-screen bg-[#f5f6fa] flex flex-col"
+      className="min-h-screen bg-[#f5f6fa] flex flex-col touch-none"
       onClick={resetInactivityTimer}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -163,28 +190,33 @@ const ItemDetails = () => {
       {/* Hero Image */}
       <div className="relative h-[35vh] overflow-hidden">
         <img src={item?.image} alt={item?.name} className="w-full h-full object-cover" />
-        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 bg-white/80 p-2 rounded-full shadow">
+        <button 
+          onClick={handleBackNavigation} 
+          className="absolute top-4 left-4 bg-white/80 p-2 rounded-full shadow"
+        >
           <ChevronLeft className="text-gray-700 w-6 h-6" />
+        </button>
+        
+        {/* Swipe Navigation Buttons */}
+        <button 
+          onClick={() => navigateToItem('prev')}
+          className={`absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg transition-opacity duration-300 ${showEdgeIndicator ? 'opacity-100' : 'opacity-0'} hover:bg-white`}
+        >
+          <ChevronLeft className="w-6 h-6 text-indigo-600" />
+        </button>
+        <button 
+          onClick={() => navigateToItem('next')}
+          className={`absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg transition-opacity duration-300 ${showEdgeIndicator ? 'opacity-100' : 'opacity-0'} hover:bg-white`}
+        >
+          <ChevronRight className="w-6 h-6 text-indigo-600" />
         </button>
       </div>
 
       {/* Content */}
-      <div className="bg-white -mt-6 rounded-t-3xl p-6 shadow-md">
-        {showEdgeIndicator && (
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-sm px-3 py-1 rounded-full animate-pulse">
-            Swipe to browse
-          </div>
-        )}
-
+      <div className="bg-white -mt-6 rounded-t-3xl p-6 shadow-md relative">
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold mt-4 text-gray-900">{item?.name}</h1>
-            <div className="flex items-center mt-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm text-gray-600 ml-1">{item?.rating || '4.5'}</span>
-              <Clock className="w-4 h-4 text-gray-400 ml-3" />
-              <span className="text-sm text-gray-600 ml-1">{item?.time || '15-20 min'}</span>
-            </div>
           </div>
           <button className="p-2 rounded-full border border-gray-200">
             <Heart className="w-5 h-5 text-gray-400" />
