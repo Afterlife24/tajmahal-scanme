@@ -1,7 +1,6 @@
 const API_KEY = 'AIzaSyA6SFA1LGwRimgKm88YUVNOj2uSzX2d5JI';
 const SPREADSHEET_ID = '11J5L6iGiMbZl7nTmfAx32hfPrhrkDFQAs3uKSW2vqxk';
 const RANGE = 'Sheet1!A2:H';
-
 function convertDriveUrlToThumbnail(url: string): string {
   if (!url) return '';
 
