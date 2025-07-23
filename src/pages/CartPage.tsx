@@ -59,7 +59,7 @@
 //           deliveryOption: deliveryOptionSelected,
 //       };
 
-//       const response = await fetch('https://tajmahal-server.gofastapi.com/createOrder', {
+//       const response = await fetch('https://5fz8cdygvi.execute-api.eu-west-3.amazonaws.com/createOrder', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(orderData),
@@ -625,7 +625,7 @@ const CartPage = () => {
         coordinates: deliveryOptionSelected === 'delivery' ? coordinates : undefined,
       };
 
-      const response = await fetch('https://tajmahal-server.gofastapi.com/createOrder', {
+      const response = await fetch('https://5fz8cdygvi.execute-api.eu-west-3.amazonaws.com/createOrder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
