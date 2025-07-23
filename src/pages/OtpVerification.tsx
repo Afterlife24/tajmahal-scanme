@@ -95,7 +95,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     setError('');
 
     try {
-      const response = await fetch('https://5fz8cdygvi.execute-api.eu-west-3.amazonaws.com/sendotp', {
+      const response = await fetch('https://vwdciv1cv0.execute-api.eu-west-3.amazonaws.com/sendotp', {
         method: 'POST',
         body: JSON.stringify({ email }),
         headers: { 'Content-Type': 'application/json' },
@@ -134,7 +134,7 @@ const OtpVerification: React.FC<OtpVerificationProps> = ({
     setVerifying(true);
     setError('');
     try {
-      const response = await fetch('https://5fz8cdygvi.execute-api.eu-west-3.amazonaws.com/verify', {
+      const response = await fetch('https://vwdciv1cv0.execute-api.eu-west-3.amazonaws.com/verify', {
         method: 'POST',
         body: JSON.stringify({ email, otp: otpCheck }),
         headers: { 'Content-Type': 'application/json' },

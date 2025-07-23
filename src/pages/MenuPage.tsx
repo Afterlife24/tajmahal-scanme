@@ -232,7 +232,7 @@ const MenuPage = () => {
   const submitReservation = async (reservationData) => {
     try {
       // Replace with your actual API endpoint
-      const response = await fetch('https://5fz8cdygvi.execute-api.eu-west-3.amazonaws.com/createReservation', {
+      const response = await fetch('https://vwdciv1cv0.execute-api.eu-west-3.amazonaws.com/createReservation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
