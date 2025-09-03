@@ -658,7 +658,7 @@ const MenuPage = () => {
                   <h3 className="font-semibold text-gray-800 text-lg truncate">{item.name}</h3>
                   
                   <p className="text-indigo-600 font-bold mt-3 text-lg">
-                    ${item.price.toFixed(2)}
+                    €{item.price.toFixed(2)}
                   </p>
                 </div>
               </Link>
