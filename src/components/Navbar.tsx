@@ -21,7 +21,7 @@ const Navbar = () => {
           <h1 className="text-2xl font-bold text-[#4F46E5]">Taj Mahal</h1>
 
           {/* Icône du panier */}
-          <Link to="/panier" className="relative">
+          <Link to="/cart" className="relative">
             <ShoppingBag className="w-6 h-6 text-[#4F46E5]" />
             {cartItems.length > 0 && (
               <span className="absolute -top-2 -right-2 bg-[#4F46E5] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -45,29 +45,17 @@ const Navbar = () => {
           </button>
         </div>
         <div className="p-4 flex flex-col gap-4">
+          
+          
           <Link
             to="/"
-            className="text-[#4F46E5] text-lg font-medium"
-            onClick={() => setSidebarOpen(false)}
-          >
-            Accueil
-          </Link>
-          <Link
-            to="/a-propos"
-            className="text-[#4F46E5] text-lg font-medium"
-            onClick={() => setSidebarOpen(false)}
-          >
-            À propos
-          </Link>
-          <Link
-            to="/menu"
             className="text-[#4F46E5] text-lg font-medium"
             onClick={() => setSidebarOpen(false)}
           >
             Menu
           </Link>
           <Link
-            to="/contact"
+            to="https://www.tajmahal-tajmahal.afterlife.org.in/"
             className="text-[#4F46E5] text-lg font-medium"
             onClick={() => setSidebarOpen(false)}
           >
